@@ -26,7 +26,7 @@ class STKPush
             $phonenumber = $payload->Body->stkCallback->CallbackMetadata->Item[4]->Value;
 
             $stkPush = MpesaSTK::where('merchant_request_id', $merchant_request_id)
-                ->where('checkout_request_id', $checkout_request_id)->first();//fetch the trasaction based on the merchant and checkout ids
+                ->where('checkout_request_id', $checkout_request_id)->first();
 
             $data = [
                 'result_desc' => $result_desc,
@@ -40,7 +40,7 @@ class STKPush
             ];
 
             if ($stkPush) {
-                $stkPush->fill($data)->save();
+                $stkPush->fill($data)->create();
             } else {
                 MpesaSTK::create($data);
             }

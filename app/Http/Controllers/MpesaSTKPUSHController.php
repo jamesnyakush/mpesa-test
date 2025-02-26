@@ -23,9 +23,6 @@ class MpesaSTKPUSHController extends Controller
 
         $result = $response->json();
 
-
-        //dump($result);
-
         if (!is_null($result)) {
             MpesaSTK::create([
                 'merchant_request_id' =>  $result['MerchantRequestID'],
@@ -46,6 +43,7 @@ class MpesaSTKPUSHController extends Controller
             $this->result_desc = 'Success';
         }
 
+        dump($stk_push_confirm);
         return response()->json([
             'ResultCode' => $this->result_code,
             'ResultDesc' => $this->result_desc
