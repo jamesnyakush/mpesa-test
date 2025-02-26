@@ -4,6 +4,7 @@ namespace App\Mpesa;
 
 use App\Models\MpesaSTK;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 // This Class is responsible for getting a response from Safaricom and Storing the Transaction Details to the Database
 class STKPush
@@ -11,10 +12,11 @@ class STKPush
     public bool $failed = false;
     public string $response = 'An Unkown Error Occured';
 
-    public function confirm(Request $request)
+    public function confirm(Request $request): static
     {
         $payload = json_decode($request->getContent());
 
+        Log::info("STKPush Confirmation");
         if (property_exists($payload, 'Body') && $payload->Body->stkCallback->ResultCode == '0') {
             $merchant_request_id = $payload->Body->stkCallback->MerchantRequestID;
             $checkout_request_id = $payload->Body->stkCallback->CheckoutRequestID;
@@ -28,6 +30,8 @@ class STKPush
             $stkPush = MpesaSTK::where('merchant_request_id', $merchant_request_id)
                 ->where('checkout_request_id', $checkout_request_id)->first();
 
+            dump($stkPush);
+
             $data = [
                 'result_desc' => $result_desc,
                 'result_code' => $result_code,
@@ -40,7 +44,7 @@ class STKPush
             ];
 
             if ($stkPush) {
-                $stkPush->fill($data)->create();
+                $stkPush->fill($data)->save();
             } else {
                 MpesaSTK::create($data);
             }

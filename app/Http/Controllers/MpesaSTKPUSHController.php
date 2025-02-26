@@ -6,6 +6,7 @@ use App\Models\MpesaSTK;
 use App\Mpesa\STKPush;
 use Iankumu\Mpesa\Facades\Mpesa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MpesaSTKPUSHController extends Controller
 {
@@ -38,12 +39,9 @@ class MpesaSTKPUSHController extends Controller
     {
         $stk_push_confirm = (new STKPush())->confirm($request);
 
-        if ($stk_push_confirm) {
-            $this->result_code = 0;
-            $this->result_desc = 'Success';
-        }
+        $this->result_code = 0;
+        $this->result_desc = 'Success';
 
-        dump($stk_push_confirm);
         return response()->json([
             'ResultCode' => $this->result_code,
             'ResultDesc' => $this->result_desc

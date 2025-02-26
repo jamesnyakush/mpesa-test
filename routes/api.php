@@ -9,7 +9,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('/v1/mpesatest/stk/push', [MpesaSTKPUSHController::class, 'STKPush']);
+Route::post('/v1/trial/stk/push', [MpesaSTKPUSHController::class, 'STKPush']);
 Route::post('/v1/confirm', [MpesaSTKPUSHController::class, 'STKConfirm']);
 Route::post('/v1/callback/query', [MpesaSTKPUSHController::class, 'query']);
 

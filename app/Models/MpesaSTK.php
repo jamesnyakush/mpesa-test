@@ -9,10 +9,6 @@ class MpesaSTK extends Model
     protected $guarded = [];
 
     protected $table = 'mpesa_stk';
-//    protected $fillable = [
-//        'merchant_request_id',
-//        'checkout_request_id'
-//    ];
 
     protected $fillable = [
         'result_desc',
