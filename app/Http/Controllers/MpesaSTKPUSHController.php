@@ -20,7 +20,7 @@ class MpesaSTKPUSHController extends Controller
         $phoneno = $request->input('phonenumber');
         $account_number = $request->input('account_number');
 
-        $response = Mpesa::stkpush($phoneno, $amount, $account_number);
+        $response = Mpesa::stkpush($phoneno, $amount, $account_number,"https://payment.test/api/v1/confirm");
 
         $result = $response->json();
 

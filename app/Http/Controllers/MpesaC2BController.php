@@ -45,7 +45,6 @@ class MpesaC2BController extends Controller
 
     public function confirmation(Request $request)
     {
-
         return (new C2B())->confirm($request);
     }
 }
