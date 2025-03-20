@@ -13,13 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->web(append: [
-            ValidateCsrfToken::class => [
-                'except' => [
-                    'api/v1/confirm', // M-Pesa callback URL
-                ],
-            ],
-        ]);
+        // Add our custom middleware to handle M-Pesa callbacks
+        $middleware->append(\App\Http\Middleware\AllowMpesaCallbacks::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
