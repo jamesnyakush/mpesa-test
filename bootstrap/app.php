@@ -12,7 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->web(append: [
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class => [
+                'except' => [
+                    'api/v1/confirm', // M-Pesa callback URL
+                ],
+            ],
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
