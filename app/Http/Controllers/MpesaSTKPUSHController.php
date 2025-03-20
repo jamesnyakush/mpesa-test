@@ -13,43 +13,96 @@ class MpesaSTKPUSHController extends Controller
     public int $result_code = 1;
     public string $result_desc = 'An error occured';
 
+
     public function STKPush(Request $request)
     {
         $amount = $request->input('amount');
         $phoneno = $request->input('phonenumber');
         $account_number = $request->input('account_number');
 
-        // Make sure the callback URL is correct and publicly accessible
-        // If testing locally, consider using ngrok to expose your local server
-        $callbackUrl = "https://payment.test/api/v1/confirm";
-
         // Add debug logging
         \Log::info('Initiating STK Push', [
             'phone' => $phoneno,
             'amount' => $amount,
-            'account' => $account_number,
-            'callback' => $callbackUrl
+            'account' => $account_number
         ]);
 
-        $response = Mpesa::stkpush($phoneno, $amount, $account_number);
+        $response = Mpesa::stkpush($phoneno, $amount, $account_number, "https://payment.test/api/v1/confirm");
 
         $result = $response->json();
         \Log::info('STK Push Response', $result);
 
-        if (!is_null($result)) {
-            MpesaSTK::create([
-                'merchant_request_id' =>  $result['MerchantRequestID'],
-                'checkout_request_id' =>  $result['CheckoutRequestID']
-            ]);
-        }
+        // Check if the result has the expected fields and the response code indicates success
+        if (!is_null($result) &&
+            isset($result['MerchantRequestID']) &&
+            isset($result['CheckoutRequestID']) &&
+            isset($result['ResponseCode']) &&
+            $result['ResponseCode'] === '0') {  // Only proceed if response code is successful
 
-        return $result;
+            try {
+                // Add more detailed logging
+                \Log::info('Creating MpesaSTK record for successful request', [
+                    'merchant_request_id' => $result['MerchantRequestID'],
+                    'checkout_request_id' => $result['CheckoutRequestID']
+                ]);
+
+                // Create the record
+                $stkRecord = MpesaSTK::create([
+                    'merchant_request_id' => $result['MerchantRequestID'],
+                    'checkout_request_id' => $result['CheckoutRequestID'],
+                    'amount' => $amount,
+                    'phonenumber' => $phoneno,
+                    'account_number' => $account_number,
+                    //'mpesa_receipt_number' => $result['MpesaReceiptNumber'],
+                    'result_code' => $result['ResponseCode'],
+                    'result_desc' => $result['ResponseDescription'] ?? 'Request accepted for processing'
+                ]);
+                Log::info('Receipt', ['recpt' => $result]);
+
+                \Log::info('MpesaSTK record created successfully', ['record_id' => $stkRecord->id]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['CustomerMessage'] ?? 'Request accepted for processing',
+                    'data' => $result
+                ]);
+
+            } catch (\Exception $e) {
+                \Log::error('Failed to create MpesaSTK record', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to process payment request',
+                    'error' => 'Database error'
+                ], 500);
+            }
+        } else {
+            // Handle failed response from Mpesa
+            $errorMessage = $result['ResponseDescription'] ?? 'Unknown error occurred';
+            $errorCode = $result['ResponseCode'] ?? 'unknown';
+
+            \Log::error('Failed STK Push response', [
+                'code' => $errorCode,
+                'message' => $errorMessage,
+                'result' => $result
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage,
+                'error' => 'Payment gateway error'
+            ], 400);
+        }
     }
+
 
     public function STKConfirm(Request $request)
     {
         // Log the raw request for debugging
-        \Log::info('STK Callback Raw Request', [
+        \Log::info('STK Callback Received', [
             'content' => $request->getContent(),
             'headers' => $request->headers->all()
         ]);
