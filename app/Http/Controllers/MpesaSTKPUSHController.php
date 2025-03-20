@@ -27,8 +27,9 @@ class MpesaSTKPUSHController extends Controller
             'account' => $account_number
         ]);
 
-        $response = Mpesa::stkpush($phoneno, $amount, $account_number);
-
+        // In your STKPush method
+        $callbackUrl = config('app.url') . '/api/v1/confirm';
+        $response = Mpesa::stkpush($phoneno, $amount, $account_number, $callbackUrl);
         $result = $response->json();
         \Log::info('STK Push Response', $result);
 

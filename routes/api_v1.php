@@ -4,7 +4,7 @@ use App\Http\Controllers\MpesaC2BController;
 use App\Http\Controllers\MpesaSTKPUSHController;
 
 Route::post('/trial/stk/push', [MpesaSTKPUSHController::class, 'STKPush']);
-Route::post('/confirm', [MpesaSTKPUSHController::class, 'STKConfirm']);
+Route::post('/confirm', [MpesaSTKPUSHController::class, 'STKConfirm'])->middleware('api');
 Route::post('/callback/query', [MpesaSTKPUSHController::class, 'query']);
 
 Route::post('/c2b/simulate', [MPESAC2BController::class, 'simulate']);
