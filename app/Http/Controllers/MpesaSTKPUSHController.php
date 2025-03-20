@@ -27,17 +27,19 @@ class MpesaSTKPUSHController extends Controller
             'account' => $account_number
         ]);
 
-        $response = Mpesa::stkpush($phoneno, $amount, $account_number, "https://payment.test/api/v1/confirm");
+        $response = Mpesa::stkpush($phoneno, $amount, $account_number);
 
         $result = $response->json();
         \Log::info('STK Push Response', $result);
 
         // Check if the result has the expected fields and the response code indicates success
-        if (!is_null($result) &&
+        if (
+            !is_null($result) &&
             isset($result['MerchantRequestID']) &&
             isset($result['CheckoutRequestID']) &&
             isset($result['ResponseCode']) &&
-            $result['ResponseCode'] === '0') {  // Only proceed if response code is successful
+            $result['ResponseCode'] === '0'
+        ) {  // Only proceed if response code is successful
 
             try {
                 // Add more detailed logging
