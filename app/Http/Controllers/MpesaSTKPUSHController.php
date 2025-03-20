@@ -32,7 +32,6 @@ class MpesaSTKPUSHController extends Controller
         $result = $response->json();
         \Log::info('STK Push Response', $result);
 
-        // Check if the result has the expected fields and the response code indicates success
         if (
             !is_null($result) &&
             isset($result['MerchantRequestID']) &&
@@ -43,25 +42,24 @@ class MpesaSTKPUSHController extends Controller
 
             try {
                 // Add more detailed logging
-                \Log::info('Creating MpesaSTK record for successful request', [
+                \Log::info('Creating initial MpesaSTK record', [
                     'merchant_request_id' => $result['MerchantRequestID'],
                     'checkout_request_id' => $result['CheckoutRequestID']
                 ]);
 
-                // Create the record
+                // Create the record with only the initial data
+                // The callback will update with transaction details later
                 $stkRecord = MpesaSTK::create([
                     'merchant_request_id' => $result['MerchantRequestID'],
                     'checkout_request_id' => $result['CheckoutRequestID'],
                     'amount' => $amount,
                     'phonenumber' => $phoneno,
                     'account_number' => $account_number,
-                    //'mpesa_receipt_number' => $result['MpesaReceiptNumber'],
                     'result_code' => $result['ResponseCode'],
-                    'result_desc' => $result['ResponseDescription'] ?? 'Request accepted for processing'
+                    'result_desc' => 'Awaiting processing'
                 ]);
-                Log::info('Receipt', ['recpt' => $result]);
 
-                \Log::info('MpesaSTK record created successfully', ['record_id' => $stkRecord->id]);
+                \Log::info('Initial MpesaSTK record created successfully', ['record_id' => $stkRecord->id]);
 
                 return response()->json([
                     'success' => true,
@@ -104,8 +102,8 @@ class MpesaSTKPUSHController extends Controller
     public function STKConfirm(Request $request)
     {
         // Log the raw request for debugging
-        \Log::info('STK Callback Received', [
-            'content' => $request->getContent(),
+        \Log::info('STK Callback Received in Controller', [
+            'content_length' => strlen($request->getContent()),
             'headers' => $request->headers->all()
         ]);
 
@@ -118,10 +116,12 @@ class MpesaSTKPUSHController extends Controller
             if ($result->failed) {
                 \Log::error('STK Push confirmation failed: ' . $result->response);
             } else {
-                \Log::info('STK Push confirmation successful');
+                \Log::info('STK Push confirmation successful: ' . $result->response);
             }
         } catch (\Exception $e) {
-            \Log::error('Exception in STK Callback: ' . $e->getMessage(), [
+            \Log::error('Exception in STK Callback controller: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
         }
