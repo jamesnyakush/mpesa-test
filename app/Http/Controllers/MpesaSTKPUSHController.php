@@ -31,7 +31,7 @@ class MpesaSTKPUSHController extends Controller
             'callback' => $callbackUrl
         ]);
 
-        $response = Mpesa::stkpush($phoneno, $amount, $account_number, $callbackUrl);
+        $response = Mpesa::stkpush($phoneno, $amount, $account_number);
 
         $result = $response->json();
         \Log::info('STK Push Response', $result);
